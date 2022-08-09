@@ -19,15 +19,21 @@
   },
   "license": "MIT",
   "author": "Kevin Van Lierde (https://webketje.com)",
-  "main": "index.js",
   "directories": {
     "lib": "lib",
     "test": "test"
   },
   "files": [
-    "index.js",
-    "CHANGELOG.md"
+    "lib"
   ],
+  "source": "src/index.js",
+  "main": "lib/index.cjs",
+  "module": "lib/index.js",
+  "type": "module",
+  "exports": {
+    "import": "./lib/index.js",
+    "require": "./lib/index.cjs"
+  },
   "scripts": {
     "changelog": "auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)'",
     "coverage": "nyc report --reporter=text-lcov > ./coverage.info",
@@ -36,8 +42,10 @@
     "lint": "eslint --fix .",
     "lint:check": "eslint --fix-dry-run .",
     "release": "release-it .",
+    "pretest": "npm run build",
     "test": "nyc mocha",
-    "test:e2e": "npm test && serve -l 3000 test/fixtures"
+    "test:e2e": "npm test && serve -l 3000 test/fixtures",
+    "build": "microbundle --target node --no-sourcemap -f cjs,esm --strict --generateTypes=false"
   },
   "devDependencies": {
     "assert-dir-equal": "^1.0.1",
@@ -47,6 +55,7 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-node": "^11.1.0",
     "metalsmith": "^2.1.0",
+    "microbundle": "^0.15.0",
     "mocha": "^9.2.2",
     "nyc": "^15.1.0",
     "postcss": "^8.4.16",
@@ -60,7 +69,7 @@
     "postcss": "^5.0.4 || ^6.0.0 || ^7.0.0 || ^8.0.0"
   },
   "engines": {
-    "node": ">=12"
+    "node": ">=12.2.0"
   },
   "publishConfig": {
     "access": "public"

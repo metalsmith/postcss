@@ -1,10 +1,13 @@
+/* eslint-env node, mocha */
+
 const path = require("path");
 const assert = require("assert");
-const { describe, it } = require("mocha");
 const fixture = path.resolve.bind(path, __dirname, "fixtures");
 const equal = require("assert-dir-equal");
 const Metalsmith = require("metalsmith");
 const { name } = require("../package.json");
+
+/* eslint-disable-next-line node/no-missing-require */
 const postcss = require("..");
 
 describe("@metalsmith/postcss", function () {

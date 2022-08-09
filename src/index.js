@@ -1,5 +1,10 @@
-const postcssLib = require("postcss");
-const path = require("path");
+import postcssLib from "postcss";
+import path from "path";
+import module, { createRequire } from "module";
+
+// support for dynamic imports landed in Node 13.2.0, and was available with --experimental-modules flag in 12.0.0
+// ideally all the loaders should be refactored to be async, and loaded only when the plugin runs
+const req = module.require || createRequire(import.meta.url);
 
 const defaultOptions = {
   pattern: "**/*.css",
@@ -43,13 +48,13 @@ function initPostcss(options) {
   // and add it to the plugins array.
   pluginsConfig.forEach(function (pluginsObject) {
     if (typeof pluginsObject === "string") {
-      plugins.push(require(pluginsObject)({}));
+      plugins.push(req(pluginsObject)({}));
     } else {
       Object.keys(pluginsObject).forEach(function (pluginName) {
         const value = pluginsObject[pluginName];
         if (value === false) return;
         const pluginOptions = value === true ? {} : value;
-        plugins.push(require(pluginName)(pluginOptions));
+        plugins.push(req(pluginName)(pluginOptions));
       });
     }
   });
@@ -59,7 +64,7 @@ function initPostcss(options) {
   const processor = postcssLib(plugins);
 
   return function postcss(files, metalsmith, done) {
-    const styles = metalsmith.match(options.pattern);
+    const styles = metalsmith.match(options.pattern, Object.keys(files));
 
     if (styles.length == 0) {
       done();
@@ -116,4 +121,4 @@ function initPostcss(options) {
   };
 }
 
-module.exports = initPostcss;
+export default initPostcss;

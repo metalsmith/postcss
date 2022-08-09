@@ -30,7 +30,7 @@ Add the postcss package name, optionally with its options, to your `.use()` dire
 Here is an example using `postcss-pseudoelements` and `postcss-nested` to transform your source files:
 
 ```js
-const postcss = require('@metalsmith/postcss');
+import postcss from '@metalsmith/postcss';
 
 // defaults with 2 plugins:
 metalsmith.use(postcss({ plugins: {
