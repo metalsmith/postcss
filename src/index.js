@@ -1,10 +1,10 @@
 import postcssLib from "postcss";
 import path from "path";
-import module, { createRequire } from "module";
+import mod, { createRequire } from "module";
 
 // support for dynamic imports landed in Node 13.2.0, and was available with --experimental-modules flag in 12.0.0
 // ideally all the loaders should be refactored to be async, and loaded only when the plugin runs
-const req = module.require || createRequire(import.meta.url);
+const req = mod.require || createRequire(import.meta.url);
 
 const defaultOptions = {
   pattern: "**/*.css",
@@ -13,8 +13,8 @@ const defaultOptions = {
 };
 
 /**
- * @param {import('postcss').ProcessOptions['map']} map 
- * @param {boolean} development 
+ * @param {import('postcss').ProcessOptions['map']} map
+ * @param {boolean} development
  * @returns {import('postcss').SourceMapOptions}
  */
 function normalizeMapOptions(map, development) {
@@ -23,8 +23,13 @@ function normalizeMapOptions(map, development) {
 
   // legacy compat sets inline: true when map: true. false would be better
   return {
-    inline: map === true ? true : (typeof map.inline === 'boolean' ? map.inline : development),
-    sourcesContent: true
+    inline:
+      map === true
+        ? true
+        : typeof map.inline === "boolean"
+        ? map.inline
+        : development,
+    sourcesContent: true,
   };
 }
 
@@ -68,13 +73,13 @@ function initPostcss(options) {
   const processor = postcssLib(plugins);
 
   return function postcss(files, metalsmith, done) {
-    const map = normalizeMapOptions(options.map, metalsmith.env('NODE_ENV') === 'development');
+    const map = normalizeMapOptions(
+      options.map,
+      metalsmith.env("NODE_ENV") === "development"
+    );
     const styles = metalsmith.match(options.pattern, Object.keys(files));
-
-    if (styles.length == 0) {
-      done();
-      return;
-    }
+    const debug = metalsmith.debug("@metalsmith/postcss");
+    debug("Running with options %O", { ...options, map });
 
     const promises = [];
 
@@ -85,8 +90,10 @@ function initPostcss(options) {
       // if a previous source map has been generated for this file (eg through sass),
       // pass its contents onto postcss
       const prevMap = files[`${file}.map`];
-      const mapOpts = (map && prevMap) ? { prev: prevMap.contents.toString(), ...map } : map
+      const mapOpts =
+        map && prevMap ? { prev: prevMap.contents.toString(), ...map } : map;
 
+      debug.info('Processing file "%s"', file);
       const promise = processor
         .process(contents, {
           from: absolutePath,
@@ -95,8 +102,21 @@ function initPostcss(options) {
         })
         .then(function (result) {
           files[file].contents = Buffer.from(result.css);
-
-          if (result.map) {
+          debug.info('Updated CSS at "%s"', file);
+          if (map.inline) {
+            if (prevMap) {
+              debug.info(
+                'Moving contents of previous source map file "%s" inline',
+                file
+              );
+              delete files[`${file}.map`];
+            }
+          } else if (result.map) {
+            debug.info(
+              '%s source map at "%s"',
+              prevMap ? "Updating" : "Adding",
+              file
+            );
             files[`${file}.map`] = {
               contents: Buffer.from(result.map.toString()),
               mode: files[file].mode,
@@ -109,10 +129,11 @@ function initPostcss(options) {
     });
 
     Promise.all(promises)
-      .then(function () {
+      .then(() => {
+        debug("Finished processing %s CSS file(s)", styles.length);
         done();
       })
-      .catch(function (error) {
+      .catch((error) => {
         // JSON.stringify on an actual error object yields 0 key/values
         if (error instanceof Error) {
           return done(error);

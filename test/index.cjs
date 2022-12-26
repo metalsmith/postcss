@@ -10,6 +10,22 @@ const { name } = require("../package.json");
 /* eslint-disable-next-line node/no-missing-require */
 const postcss = require("..");
 
+function debugMock() {
+  function debuggr(...args) {
+    debugInit.logs.push(['log', ...args])
+  }
+  debuggr.info = (...args) => debugInit.logs.push(['info', ...args])
+  debuggr.warn = (...args) => debugInit.logs.push(['warn', ...args])
+  debuggr.error = (...args) => debugInit.logs.push(['error', ...args])
+
+  function debugInit() {
+    return debuggr
+  }
+  debugInit.enable = () => { }
+  debugInit.logs = []
+  return debugInit
+}
+
 describe("@metalsmith/postcss", function () {
   it("should export a named plugin function matching package.json name", function () {
     const namechars = name.split("/")[1];
@@ -18,8 +34,8 @@ describe("@metalsmith/postcss", function () {
         namechars[i - 1] === "-"
           ? char.toUpperCase()
           : char === "-"
-          ? ""
-          : char;
+            ? ""
+            : char;
       return str;
     }, "");
     assert.strictEqual(postcss().name, camelCased);
@@ -96,6 +112,52 @@ describe("@metalsmith/postcss", function () {
           done();
         });
     });
+
+    it("should use defaults according to metalsmith.env('NODE_ENV') [dev]", function (done) {
+      const ms = Metalsmith(fixture("inline-sourcemaps"))
+      ms.debug = debugMock()
+      ms
+        .env('NODE_ENV', 'development')
+        .env('DEBUG', '@metalsmith/postcss*')
+        .use(postcss())
+        .process((err) => {
+          if (err) done(err)
+          try {
+            assert.deepStrictEqual(ms.debug.logs[0][2], {
+              map: {
+                inline: true,
+                sourcesContent: true,
+              },
+              pattern: '**/*.css',
+              plugins: []
+            });
+            done();
+          } catch (err) {
+            done(err)
+          }
+        });
+    })
+
+    it("should use defaults according to metalsmith.env('NODE_ENV') [prod]", function (done) {
+      const ms = Metalsmith(fixture("inline-sourcemaps"))
+      ms.debug = debugMock()
+      ms
+        .env('DEBUG', '@metalsmith/postcss*')
+        .use(postcss())
+        .process((err) => {
+          if (err) done(err)
+          try {
+            assert.deepStrictEqual(ms.debug.logs[0][2], {
+              map: false,
+              pattern: '**/*.css',
+              plugins: []
+            });
+            done();
+          } catch (err) {
+            done(err)
+          }
+        });
+    })
 
     it("should pass absolute paths to postcss", function (done) {
       const metalsmith = Metalsmith(fixture("use-absolute-paths"));
