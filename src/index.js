@@ -12,13 +12,19 @@ const defaultOptions = {
   plugins: [],
 };
 
-function normalizeMapOptions(map) {
-  if (!map) return undefined;
+/**
+ * @param {import('postcss').ProcessOptions['map']} map 
+ * @param {boolean} development 
+ * @returns {import('postcss').SourceMapOptions}
+ */
+function normalizeMapOptions(map, development) {
+  // no source maps in prod by default unless overridden with options
+  if (!map && !development) return false;
 
+  // legacy compat sets inline: true when map: true. false would be better
   return {
-    inline: map === true ? true : map.inline,
-    prev: undefined,
-    sourcesContent: true,
+    inline: map === true ? true : (typeof map.inline === 'boolean' ? map.inline : development),
+    sourcesContent: true
   };
 }
 
@@ -59,11 +65,10 @@ function initPostcss(options) {
     }
   });
 
-  const map = normalizeMapOptions(options.map);
-
   const processor = postcssLib(plugins);
 
   return function postcss(files, metalsmith, done) {
+    const map = normalizeMapOptions(options.map, metalsmith.env('NODE_ENV') === 'development');
     const styles = metalsmith.match(options.pattern, Object.keys(files));
 
     if (styles.length == 0) {
@@ -80,22 +85,20 @@ function initPostcss(options) {
       // if a previous source map has been generated for this file (eg through sass),
       // pass its contents onto postcss
       const prevMap = files[`${file}.map`];
-      if (map && prevMap) {
-        map.prev = prevMap.contents.toString();
-      }
+      const mapOpts = (map && prevMap) ? { prev: prevMap.contents.toString(), ...map } : map
 
       const promise = processor
         .process(contents, {
           from: absolutePath,
           to: absolutePath,
-          map: map,
+          map: mapOpts,
         })
         .then(function (result) {
           files[file].contents = Buffer.from(result.css);
 
           if (result.map) {
             files[`${file}.map`] = {
-              contents: Buffer.from(JSON.stringify(result.map)),
+              contents: Buffer.from(result.map.toString()),
               mode: files[file].mode,
               stats: files[file].stats,
             };
