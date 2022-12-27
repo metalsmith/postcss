@@ -72,13 +72,10 @@ Sometimes plugins need to be defined in a certain order and JavaScript Objects c
 ```js
 metalsmith.use(
   postcss({
-    pattern: "*.postcss",
-    plugins: [
-      "postcss-pseudoelements",
-      { "postcss-nested": { some: "config" } },
-    ],
+    pattern: '*.postcss',
+    plugins: ['postcss-pseudoelements', { 'postcss-nested': { some: 'config' } }]
   })
-);
+)
 ```
 
 ## Sourcemaps
@@ -89,9 +86,9 @@ This plugin supports generating source maps. To do so, pass `map: true` for inli
 metalsmith.use(
   postcss({
     plugins: {},
-    map: true, // same as { inline: false }
+    map: true // same as { inline: false }
   })
-);
+)
 ```
 
 Example config for external source maps
@@ -101,10 +98,10 @@ metalsmith.use(
   postcss({
     plugins: {},
     map: {
-      inline: false,
-    },
+      inline: false
+    }
   })
-);
+)
 ```
 
 Source maps generation is compatible with [`@metalsmith/sass`](https://github.com/metalsmith/sass) and will find correct file paths from .scss source all the way through the last PostCSS transforms:

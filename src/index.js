@@ -1,16 +1,16 @@
-import postcssLib from "postcss";
-import path from "path";
-import mod, { createRequire } from "module";
+import postcssLib from 'postcss'
+import path from 'path'
+import mod, { createRequire } from 'module'
 
 // support for dynamic imports landed in Node 13.2.0, and was available with --experimental-modules flag in 12.0.0
 // ideally all the loaders should be refactored to be async, and loaded only when the plugin runs
-const req = mod.require || createRequire(import.meta.url);
+const req = mod.require || createRequire(import.meta.url)
 
 const defaultOptions = {
-  pattern: "**/*.css",
+  pattern: '**/*.css',
   map: false,
-  plugins: [],
-};
+  plugins: []
+}
 
 /**
  * @param {import('postcss').ProcessOptions['map']} map
@@ -19,18 +19,13 @@ const defaultOptions = {
  */
 function normalizeMapOptions(map, development) {
   // no source maps in prod by default unless overridden with options
-  if (!map && !development) return false;
+  if (!map && !development) return false
 
   // legacy compat sets inline: true when map: true. false would be better
   return {
-    inline:
-      map === true
-        ? true
-        : typeof map.inline === "boolean"
-        ? map.inline
-        : development,
-    sourcesContent: true,
-  };
+    inline: map === true ? true : typeof map.inline === 'boolean' ? map.inline : development,
+    sourcesContent: true
+  }
 }
 
 /**
@@ -49,100 +44,86 @@ function normalizeMapOptions(map, development) {
  * @returns {import('metalsmith').Plugin}
  */
 function initPostcss(options) {
-  options = Object.assign({}, defaultOptions, options || {});
-  const pluginsConfig = Array.isArray(options.plugins)
-    ? options.plugins
-    : [options.plugins];
-  const plugins = [];
+  options = Object.assign({}, defaultOptions, options || {})
+  const pluginsConfig = Array.isArray(options.plugins) ? options.plugins : [options.plugins]
+  const plugins = []
 
   // Require each plugin, pass its options
   // and add it to the plugins array.
   pluginsConfig.forEach(function (pluginsObject) {
-    if (typeof pluginsObject === "string") {
-      plugins.push(req(pluginsObject)({}));
+    if (typeof pluginsObject === 'string') {
+      plugins.push(req(pluginsObject)({}))
     } else {
       Object.keys(pluginsObject).forEach(function (pluginName) {
-        const value = pluginsObject[pluginName];
-        if (value === false) return;
-        const pluginOptions = value === true ? {} : value;
-        plugins.push(req(pluginName)(pluginOptions));
-      });
+        const value = pluginsObject[pluginName]
+        if (value === false) return
+        const pluginOptions = value === true ? {} : value
+        plugins.push(req(pluginName)(pluginOptions))
+      })
     }
-  });
+  })
 
-  const processor = postcssLib(plugins);
+  const processor = postcssLib(plugins)
 
   return function postcss(files, metalsmith, done) {
-    const map = normalizeMapOptions(
-      options.map,
-      metalsmith.env("NODE_ENV") === "development"
-    );
-    const styles = metalsmith.match(options.pattern, Object.keys(files));
-    const debug = metalsmith.debug("@metalsmith/postcss");
-    debug("Running with options %O", { ...options, map });
+    const map = normalizeMapOptions(options.map, metalsmith.env('NODE_ENV') === 'development')
+    const styles = metalsmith.match(options.pattern, Object.keys(files))
+    const debug = metalsmith.debug('@metalsmith/postcss')
+    debug('Running with options %O', { ...options, map })
 
-    const promises = [];
+    const promises = []
 
     styles.forEach(function (file) {
-      const contents = files[file].contents.toString();
-      const absolutePath = path.resolve(metalsmith.source(), file);
+      const contents = files[file].contents.toString()
+      const absolutePath = path.resolve(metalsmith.source(), file)
 
       // if a previous source map has been generated for this file (eg through sass),
       // pass its contents onto postcss
-      const prevMap = files[`${file}.map`];
-      const mapOpts =
-        map && prevMap ? { prev: prevMap.contents.toString(), ...map } : map;
+      const prevMap = files[`${file}.map`]
+      const mapOpts = map && prevMap ? { prev: prevMap.contents.toString(), ...map } : map
 
-      debug.info('Processing file "%s"', file);
+      debug.info('Processing file "%s"', file)
       const promise = processor
         .process(contents, {
           from: absolutePath,
           to: absolutePath,
-          map: mapOpts,
+          map: mapOpts
         })
         .then(function (result) {
-          files[file].contents = Buffer.from(result.css);
-          debug.info('Updated CSS at "%s"', file);
+          files[file].contents = Buffer.from(result.css)
+          debug.info('Updated CSS at "%s"', file)
           if (map.inline) {
             if (prevMap) {
-              debug.info(
-                'Moving contents of previous source map file "%s" inline',
-                file
-              );
-              delete files[`${file}.map`];
+              debug.info('Moving contents of previous source map file "%s" inline', file)
+              delete files[`${file}.map`]
             }
           } else if (result.map) {
-            debug.info(
-              '%s source map at "%s"',
-              prevMap ? "Updating" : "Adding",
-              file
-            );
+            debug.info('%s source map at "%s"', prevMap ? 'Updating' : 'Adding', file)
             files[`${file}.map`] = {
               contents: Buffer.from(result.map.toString()),
               mode: files[file].mode,
-              stats: files[file].stats,
-            };
+              stats: files[file].stats
+            }
           }
-        });
+        })
 
-      promises.push(promise);
-    });
+      promises.push(promise)
+    })
 
     Promise.all(promises)
       .then(() => {
-        debug("Finished processing %s CSS file(s)", styles.length);
-        done();
+        debug('Finished processing %s CSS file(s)', styles.length)
+        done()
       })
       .catch((error) => {
         // JSON.stringify on an actual error object yields 0 key/values
         if (error instanceof Error) {
-          return done(error);
+          return done(error)
         }
-        done(
-          new Error("Error during postcss processing: " + JSON.stringify(error))
-        );
-      });
-  };
+        // istanbul ignore next
+        done(new Error('Error during postcss processing: ' + JSON.stringify(error)))
+      })
+  }
 }
 
-export default initPostcss;
+export default initPostcss
