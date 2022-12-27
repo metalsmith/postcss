@@ -49,8 +49,10 @@
     "build": "microbundle --target node --no-sourcemap -f cjs,esm --strict --generateTypes=false"
   },
   "devDependencies": {
-    "assert-dir-equal": "^1.0.1",
+    "@metalsmith/sass": "^1.2.0",
+    "assert-dir-equal": "github:webketje/assert-dir-equal#v2.0.0",
     "auto-changelog": "^2.4.0",
+    "autoprefixer": "^10.4.13",
     "eslint": "^8.30.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",

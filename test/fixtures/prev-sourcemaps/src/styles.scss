@@ -1,0 +1,18 @@
+@mixin userSelectNone {
+  user-select: none;
+}
+
+body {
+  color: peachpuff;
+
+  p {
+    box-shadow: 0 0 5px black;
+  }
+
+  .example {
+    display: grid;
+    transition: all .5s;
+    @include userSelectNone();
+    background: linear-gradient(to bottom, white, black);
+  }
+}

@@ -1,5 +1,6 @@
 /* eslint-env node, mocha */
 
+const sass = require("@metalsmith/sass");
 const path = require("path");
 const assert = require("assert");
 const fixture = path.resolve.bind(path, __dirname, "fixtures");
@@ -52,6 +53,25 @@ describe("@metalsmith/postcss", function () {
         );
         done();
       });
+  });
+
+  it("should handle errors appropriately", function (done) {
+    const ms = Metalsmith(fixture("no-sourcemaps"))
+    const files = {
+      'first.css': {
+        contents: Buffer.from('invalid-css')
+      }
+    }
+    postcss({
+      plugins: ['autoprefixer']
+    })(files, ms, (err) => {
+      if (err) {
+       assert.strictEqual(err.name, 'CssSyntaxError')
+       done()
+      } else {
+        done(new Error('should throw'))
+      }
+    })
   });
 
   describe("sourcemaps", function () {
@@ -153,6 +173,26 @@ describe("@metalsmith/postcss", function () {
               plugins: []
             });
             done();
+          } catch (err) {
+            done(err)
+          }
+        });
+    })
+
+    it('should take into account previous source maps', function(done) {
+      const ms = Metalsmith(fixture("prev-sourcemaps"))
+
+      ms
+        .use(sass({ sourceMap: true }))
+        .use(postcss({ map: { inline: true }, plugins: ['autoprefixer']}))
+        .build((err) => {
+          if (err) done(err)
+          try {
+            equal(
+              fixture("prev-sourcemaps/build"),
+              fixture("prev-sourcemaps/expected")
+            );
+            done()
           } catch (err) {
             done(err)
           }
