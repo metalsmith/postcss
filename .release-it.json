@@ -19,6 +19,6 @@
     "release": true,
     "releaseName": "@metalsmith/postcss ${version}",
     "tokenRef": "GITHUB_TOKEN",
-    "assets": ["@metalsmith/postcss-${version}.tgz"]
+    "assets": ["metalsmith-postcss-${version}.tgz"]
   }
 }
