@@ -66,8 +66,8 @@ describe("@metalsmith/postcss", function () {
       plugins: ['autoprefixer']
     })(files, ms, (err) => {
       if (err) {
-       assert.strictEqual(err.name, 'CssSyntaxError')
-       done()
+        assert.strictEqual(err.name, 'CssSyntaxError')
+        done()
       } else {
         done(new Error('should throw'))
       }
@@ -179,12 +179,12 @@ describe("@metalsmith/postcss", function () {
         });
     })
 
-    it('should take into account previous source maps', function(done) {
+    it('should take into account previous source maps', function (done) {
       const ms = Metalsmith(fixture("prev-sourcemaps"))
 
       ms
         .use(sass({ sourceMap: true }))
-        .use(postcss({ map: { inline: true }, plugins: ['autoprefixer']}))
+        .use(postcss({ map: { inline: true }, plugins: ['autoprefixer'] }))
         .build((err) => {
           if (err) done(err)
           try {
@@ -246,5 +246,39 @@ describe("@metalsmith/postcss", function () {
           done();
         });
     });
+
+    it("should support the PostCSS syntax options", function (done) {
+      const metalsmith = Metalsmith(fixture("scss-syntax"));
+      metalsmith
+        .env('DEBUG', process.env.DEBUG)
+        .use(postcss({
+          pattern: '**/*.scss',
+          syntax: 'postcss-scss',
+          plugins: [
+            { "postcss-import": {} },
+            {
+              "stylelint": {
+                "rules": {
+                  "color-no-invalid-hex": true,
+                  "no-descending-specificity": true
+                }
+              }
+            },
+            { "postcss-reporter": {} }
+          ]
+        }))
+        .build(function (err) {
+          try {
+            assert.strictEqual(err, null)
+            equal(
+              fixture("scss-syntax/build"),
+              fixture("scss-syntax/expected")
+            );
+            done();
+          } catch (err) {
+            done(err)
+          }
+        });
+    })
   });
 });

@@ -38,6 +38,7 @@ function normalizeMapOptions(map, development) {
  * @param {Object} options
  * @param {string|string[]} [options.pattern] Pattern(s) of CSS files to match relative to `Metalsmith.source()`. Default is `**\/*.css`
  * @param {boolean|SourceMapOptions} [options.map] Pass `true` for inline sourcemaps, or `{ inline: false }` for external source maps
+ * @param {string|import('postcss').Syntax} [options.syntax] Module name of a PostCSS {@link Syntax} or a {@link Syntax} module itself. Can also be a custom syntax or a relative module path
  * @param {string|{'postcss-plugin': Object}|Array<{'postcss-plugin': Object}|string>} options.plugins
  * An object with PostCSS plugin names as keys and their options as values, or an array of PostCSS plugins as names, eg `'postcss-plugin'`
  * or objects in the format `{ 'postcss-plugin': {...options}}`
@@ -83,29 +84,31 @@ function initPostcss(options) {
       const mapOpts = map && prevMap ? { prev: prevMap.contents.toString(), ...map } : map
 
       debug.info('Processing file "%s"', file)
-      const promise = processor
-        .process(contents, {
-          from: absolutePath,
-          to: absolutePath,
-          map: mapOpts
-        })
-        .then(function (result) {
-          files[file].contents = Buffer.from(result.css)
-          debug.info('Updated CSS at "%s"', file)
-          if (map.inline) {
-            if (prevMap) {
-              debug.info('Moving contents of previous source map file "%s" inline', file)
-              delete files[`${file}.map`]
-            }
-          } else if (result.map) {
-            debug.info('%s source map at "%s"', prevMap ? 'Updating' : 'Adding', file)
-            files[`${file}.map`] = {
-              contents: Buffer.from(result.map.toString()),
-              mode: files[file].mode,
-              stats: files[file].stats
-            }
+      const processOptions = {
+        from: absolutePath,
+        to: absolutePath,
+        map: mapOpts
+      }
+      if (options.syntax) {
+        processOptions.syntax = typeof options.syntax === 'string' ? req(options.syntax) : options.syntax
+      }
+      const promise = processor.process(contents, processOptions).then(function (result) {
+        files[file].contents = Buffer.from(result.css)
+        debug.info('Updated CSS at "%s"', file)
+        if (map.inline) {
+          if (prevMap) {
+            debug.info('Moving contents of previous source map file "%s" inline', file)
+            delete files[`${file}.map`]
           }
-        })
+        } else if (result.map) {
+          debug.info('%s source map at "%s"', prevMap ? 'Updating' : 'Adding', file)
+          files[`${file}.map`] = {
+            contents: Buffer.from(result.map.toString()),
+            mode: files[file].mode,
+            stats: files[file].stats
+          }
+        }
+      })
 
       promises.push(promise)
     })

@@ -54,6 +54,7 @@ metalsmith.use(postcss({
 - **pattern** `{string|string[]}` _(optional)_ - Pattern of CSS files to match relative to `Metalsmith.source()`. Defaults to `**/*.css`
 - **plugins** `{Object|Array<Object|string>}` _(optional)_ - An object with PostCSS plugin names as keys and their options as values, or an array of PostCSS plugins as names, eg `'postcss-plugin'`or objects in the format `{ 'postcss-plugin': {...options}}`
 - **map** {boolean|{inline:boolean}}`*(optional)* - Pass`true`for inline sourcemaps, or`{ inline: false }` for external source maps
+- **syntax** `{string}` _(optional)_ - Module name of a [PostCSS Syntax](https://postcss.org/api/#syntax) or a syntax object itself. Can also be a custom syntax or a relative module path.
 
 By default, files with `.css` extension will be parsed. This may be overridden
 by providing a custom pattern e.g.
@@ -112,7 +113,7 @@ metalsmith
     entries: {
       'src/index.scss': 'index.css'
     }
-  })
+  }))
   .use(postcss({
     map: true,
   }))
