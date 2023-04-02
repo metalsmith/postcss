@@ -109,14 +109,18 @@ Source maps generation is compatible with [`@metalsmith/sass`](https://github.co
 
 ```js
 metalsmith
-  .use(sass({
-    entries: {
-      'src/index.scss': 'index.css'
-    }
-  }))
-  .use(postcss({
-    map: true,
-  }))
+  .use(
+    sass({
+      entries: {
+        'src/index.scss': 'index.css'
+      }
+    })
+  )
+  .use(
+    postcss({
+      map: true
+    })
+  )
 ```
 
 ## CLI usage
