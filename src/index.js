@@ -44,7 +44,7 @@ function normalizeMapOptions(map, development) {
  * or objects in the format `{ 'postcss-plugin': {...options}}`
  * @returns {import('metalsmith').Plugin}
  */
-function initPostcss(options) {
+function postcss(options) {
   options = Object.assign({}, defaultOptions, options || {})
   const pluginsConfig = Array.isArray(options.plugins) ? options.plugins : [options.plugins]
   const plugins = []
@@ -129,4 +129,4 @@ function initPostcss(options) {
   }
 }
 
-export default initPostcss
+export default postcss

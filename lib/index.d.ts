@@ -1,14 +1,14 @@
 import Metalsmith from 'metalsmith';
 import { Syntax } from 'postcss';
 
-export default initPostcss;
+export default postcss;
 export type SourceMapOptions = {
     inline?: boolean;
 };
 /**
  * A metalsmith plugin that sends your CSS through any [PostCSS](https://github.com/postcss/postcss) plugins
  */
-declare function initPostcss(options: {
+declare function postcss(options: {
     /** Pattern(s) of CSS files to match relative to `Metalsmith.source()`. Default is `**\/*.css` */
     pattern?: string | string[];
     /** Pass `true` for inline sourcemaps, or `{ inline: false }` for external source maps */
