@@ -8,7 +8,7 @@ const equal = require("assert-dir-equal");
 const Metalsmith = require("metalsmith");
 const { name } = require("../package.json");
 
-/* eslint-disable-next-line node/no-missing-require */
+/* eslint-disable-next-line n/no-missing-require */
 const postcss = require("..");
 
 function debugMock() {
