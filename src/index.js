@@ -123,7 +123,7 @@ function postcss(options) {
         if (error instanceof Error) {
           return done(error)
         }
-        // istanbul ignore next
+        /* c8 ignore next */
         done(new Error('Error during postcss processing: ' + JSON.stringify(error)))
       })
   }
