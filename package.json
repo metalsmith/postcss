@@ -43,7 +43,7 @@
     "lint": "eslint --fix .",
     "lint:check": "eslint --fix-dry-run .",
     "release": "release-it .",
-    "pretest": "npm run build",
+    "prepack": "npm run build",
     "test": "c8 mocha",
     "test:e2e": "npm test && serve -l 3000 test/fixtures",
     "build": "microbundle --target node --no-sourcemap -f cjs,esm --strict --generateTypes=false"
