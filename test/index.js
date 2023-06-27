@@ -223,6 +223,40 @@ describe('@metalsmith/postcss', function () {
         })
     })
 
+    it('should do proper plugin imports', function (done) {
+      Metalsmith(fixture('use-absolute-paths'))
+        .use(
+          postcss({
+            plugins: { 'postcss-import': {}, autoprefixer: true }
+          })
+        )
+        .process((err) => {
+          try {
+            assert.strictEqual(err, null)
+            done()
+          } catch (err) {
+            done(err)
+          }
+        })
+    })
+
+    it('should throw when a plugin can not be imported', function (done) {
+      Metalsmith(fixture('use-absolute-paths'))
+        .use(
+          postcss({
+            plugins: ['postcss-import', 'autoprefixer', 'cssnano', 'inexistant']
+          })
+        )
+        .process((err) => {
+          try {
+            assert.strictEqual(err.code, 'ERR_MODULE_NOT_FOUND')
+            done()
+          } catch (err) {
+            done(err)
+          }
+        })
+    })
+
     it('should support the PostCSS syntax options', function (done) {
       const metalsmith = Metalsmith(fixture('scss-syntax'))
       metalsmith
