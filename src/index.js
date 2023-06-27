@@ -26,18 +26,16 @@ function normalizeMapOptions(map, development) {
 function postcssProcessor(plugins) {
   const pluginsReady = []
 
-  plugins.forEach((plugin) => {
-    if (typeof plugin === 'string') {
-      pluginsReady.push(import(plugins).then((plugin) => plugin.default({})))
-    } else {
+  plugins
+    .map((plugin) => (typeof plugin === 'string' ? { [plugin]: {} } : plugin))
+    .forEach((plugin) => {
       Object.keys(plugin).forEach(function (pluginName) {
         const value = plugin[pluginName]
         if (value === false) return
         const pluginOptions = value === true ? {} : value
         pluginsReady.push(import(pluginName).then((plugin) => plugin.default(pluginOptions)))
       })
-    }
-  })
+    })
   return Promise.all(pluginsReady).then((plugins) => postcssLib(plugins))
 }
 
