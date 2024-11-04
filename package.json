@@ -75,7 +75,7 @@
     "postcss": "^5.0.4 || ^6.0.0 || ^7.0.0 || ^8.0.0"
   },
   "engines": {
-    "node": ">=14.14.0"
+    "node": ">=14.18.0"
   },
   "publishConfig": {
     "access": "public"
